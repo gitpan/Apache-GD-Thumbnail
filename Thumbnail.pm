@@ -9,12 +9,14 @@ use Apache::File;
 use Apache::Constants qw(OK NOT_FOUND);
 
 BEGIN {
-    $VERSION = "0.01";
+    $VERSION = "0.02";
+    $Apache::GD::Thumbnail::DEBUG=0;
 }
 
 ### ChangeLog
 #
 # 0.01 - Jan 21, 2002 - Started
+# 0.02 - Jan 22, 2002 - Removed some debug code that shouldn't have been there
 
 sub handler
 {
@@ -29,7 +31,6 @@ sub handler
     $base=~s/\/$//;
     my $loc=$base.$uri;    
     my $MaxSize=$r->dir_config("ThumbnailMaxSize") || 50;
-    warn $loc;
     # Verify file
     if (!(-e $loc)) {
 	return NOT_FOUND;
@@ -39,6 +40,7 @@ sub handler
     my $src=undef;
     $src=GD::Image->newFromJpeg(*{$fh});
     $fh->close || die "Error closing $loc: $!";
+    warn $loc if _conf("DEBUG") > 0;
     #Create thumbnail
     my ($thumb,$x,$y)=Image::GD::Thumbnail::create($src,$MaxSize);
     # Prepare response
@@ -55,6 +57,13 @@ sub handler
     $r->print($thumb->jpeg);
     return OK;
 }
+
+sub _conf($)
+{
+    my $arg=shift;
+    return eval("\$".__PACKAGE__."::".$arg);
+}
+
 
 1;
 
