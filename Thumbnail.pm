@@ -9,7 +9,7 @@ use Apache::File;
 use Apache::Constants qw(OK NOT_FOUND);
 
 BEGIN {
-    $VERSION = "0.02";
+    $VERSION = "0.03";
     $Apache::GD::Thumbnail::DEBUG=0;
 }
 
@@ -35,14 +35,6 @@ sub handler
     if (!(-e $loc)) {
 	return NOT_FOUND;
     }
-    # Read JPEG
-    my $fh=Apache::File->new($loc) || die ("Couldn't open $loc for reading: $!");
-    my $src=undef;
-    $src=GD::Image->newFromJpeg(*{$fh});
-    $fh->close || die "Error closing $loc: $!";
-    warn $loc if _conf("DEBUG") > 0;
-    #Create thumbnail
-    my ($thumb,$x,$y)=Image::GD::Thumbnail::create($src,$MaxSize);
     # Prepare response
     $r->set_last_modified((stat $loc)[9]);
     $r->content_type('image/jpeg');
@@ -54,6 +46,14 @@ sub handler
     {
 	return OK;
     }
+    # Read JPEG
+    my $fh=Apache::File->new($loc) || die ("Couldn't open $loc for reading: $!");
+    my $src=undef;
+    $src=GD::Image->newFromJpeg(*{$fh});
+    $fh->close || die "Error closing $loc: $!";
+    warn $loc if _conf("DEBUG") > 0;
+    #Create thumbnail
+    my ($thumb,$x,$y)=Image::GD::Thumbnail::create($src,$MaxSize);
     $r->print($thumb->jpeg);
     return OK;
 }
